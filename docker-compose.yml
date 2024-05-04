@@ -1,0 +1,28 @@
+version: '3'                # version of docker compose
+services:                   # هنا ببدا اعرف اللحاجات اللى هستخدمها زى مثلا لو هستخدم داتابيز دى كدة هتكون serviceوهكذا
+  node-app:                 # هنا انا عندى service واحدة بيتاعت البرنامج وسميتها node-app
+    container_name: express-node-app-container # هنا بقوله لما تيجى ترن الكونينر سميه كذا
+    # build: .                # هنا بقوله يدور على الدوكر فايل علشان يعمل build منه
+    # volumes:
+    #   - ./src:/app/src:ro    # بمعنى ابسط انا بدل ما افضل اكتب كوماند كتير علشان اعمل build and run for all conatinersهنا بعرف كل واحدة محتاجة اى
+    ports:
+      - 4000:3001
+    # environment:
+    #   - port=4000
+    #   - NODE_ENV=production
+    env_file:
+      - ./.env'
+    volumes:
+      - mongo-db: /data/db
+  # mongo:
+  #   image: mongo
+  #   restart: always
+  #   environment:
+  #     MONGO_INITDB_ROOT_USERNAME: root
+  #     MONGO_INITDB_ROOT_PASSWORD: example
+
+volumes:
+  mongo-db:
+
+# docker run --name my-express-app-conatiner -v /media/m-hassib/New\ Volume/new_node/src:/app/src:ro -d -p 4000:3001 express-node-app
+#انا بكتب الكوماند ده هنا باختصار

@@ -1,0 +1,135 @@
+docker build -t my-express-app .   # to build image with name my-express-app
+
+docker images ls                   # to view all images in machine
+
+docker ps                          # to view all container running
+
+docker run --name my-express-app-container -d -p 4000:3001 my-express-app
+# to run image with name "my-express-app" in port 4000 and -d to non open terminal of image when run and conatiner genrate from iname is name my-express-app-container
+
+docker rm my-express-app-container -f  # to remove conatiner and -f if conatiner is running stop it and remove
+
+docker exec -it my-express-app-container bash   # execute this command mean open bash of container with -it mean in interactive mode
+
+(1)
+#ده اول نوع بس فى مشكله ان فى حاجات اساسية على local لو مسحتها هتتسمح برضو من ال conatinerبس لو اتمسحت هيظهر ايرور وال conatinerهيبوظ ومش هيرن 
+هنا بقى يجي تانى نوع وهو ان اقدر احدد الحاجات اللى ممنوع  امسحها ولو اتمسحت متتمسحش من ال container
+for example not remove node_modules this is imporatent folder
+
+docker run --name my-express-app-container -d -v "path for work directory" /media/m-hassib/New Volume/new_node:/app -p 4000:3001 my-express-app
+# for any change in this dir can change also in dir in container and reverse also any change in conatiner change alsoin local
+
+docker run --name my-express-app-conatiner -v /media/m-hassib/New\ Volume/new_node:/app:ro -d -p 4000:3001 new_my-express-app
+like abouve but any change in conatiner and not change in local           ## can change this path with $(pwd)
+
+
+(2)
+docker run --name my-express-app-conatiner -v /media/m-hassib/New\ Volume/new_node:/app:ro -v /app/node_modules -d -p 4000:3001 new_my-express-app
+-v /app/node_modules mean i want this folder can not any thing can change or remove from local
+ex: if i want remove node_modules from local can not remove from conatiner
+# بس هيظهر شوية حاجات تانية محتاجة تتصلح
+من الاخر افضل حل هل ده
+
+وهو ان src بتاع المشروع بيكون جوة فولدر src وانا هستخد bind -v على الفولدر ده بس ان اى تغيير فيه يسمع فى ال conatinerلكن اى تغيير فى باقى الحاجات التانية زى node_modulesميسمعش جوة 
+docker run --name my-express-app-conatiner -v /media/m-hassib/New\ Volume/new_node/src:/app/src:ro -d -p 4000:3001 new_my-express-app
+
+
+
+docker compose
+بتساعد فى اعمل manage اكتر من كونينر مع بعض واخليهم يكلموا بعض
+
+docker compose up   #for run docker compose file and create and run conatiner
+docker compose down #for delete conatiner
+
+
+#10 - Environment Variables
+هنا علشان اقدر اباصى Environment Variablesيعنى عندى مثلا حاجات ممكن تتغير من ديفلوبر للتانى زى مثلا ال ports
+
+(1)لو انا مش بسستخدم docker composeبجى فى docker file واستخدم env
+علشان اقدر اباصى Environment Variablesالى الكونتينر
+ENV port=4000
+
+EXPOSE ${port}
+
+(2) تاني طريقة وانا برن ال docker file اقدر اباصى عن طريق الفلاج --env
+# docker run --name my-express-app-conatiner -v /media/m-hassib/New\ Volume/new_node/src:/app/src:ro --env PORT=4000 --env NODE_ENV=development -d -p 4000:3001 express-node-app
+printenv دخه لو عايز اعرف كل Environment Variables ةه الكونتينر بس ده بعمل ما ادخل باباش على الكونتينر
+
+بدل ما اقعد اكتب ال Environment Variablesزى الكوماند اللى فوق ده لا انا هكتبهم جوة فايل ال .env
+# docker run --name my-express-app-conatiner -v /media/m-hassib/New\ Volume/new_node/src:/app/src:ro --env-file ./.env -
+d -p 4000:3001 express-node-app
+
+
+الطريقة التانية لو بستخدم docker compose
+write in docker compose file
+for example
+environment:
+      - port=4000
+      - NODE_ENV=production
+
+بدل ما اقعد اكتب حاجات كتير فى ال environmentزى كده ممكن اباصى فايل كامل
+env_file:
+      - ./.env
+
+لو عندى اكتر من environmentزى مثلا development, testing, production
+هعمل لكل واحدة docker compose طب لى علشان مثلا فى حاجات هعوز اغيرها فى كل واحدة او حاجات عايز امسحها زى مثلا 
+Volumeمش محتاجها فى ال production
+
+if i make multi docker compose so when i want run spacific docker compose file write
+docker compose -f docker-compose.prod.yml up -d
+
+بس انا كده فى فايلات ال docker compose  بكرر معظم الكود ممكناعمل ليهم ريفرنس يكون فيه الحاجات الاساسية وكلهم ياخدوا منه وبعد كدهاضيف فى كل واحد الحاجات اللى عايزها زيادة
+when run write:
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+
+
+if i need build image and run conatiner in same time
+ docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+
+
+
+if i need change in dockerfile based on environment
+(1)
+#in docker file
+ARG NODE_ENV
+RUN if [ "$NODE_ENV" = "production" ]; \
+    then npm install --only=production; \
+    else npm install; \
+    fi
+
+#in docker compose.dev.yml وهكذه مع باقى فايلات ال compose
+ build:
+      context: .
+      args:
+        - NODE_ENV=develpoment   # علشان اقدر ابعت arges when i build to docker file
+
+(2)make docker file in multi stage environment
+كل ستيج ليها جزء لوحدها كامل فى dockerfile
+FROM node:14 as base
+
+FROM base as development
+COPY package.json .
+RUN npm install
+COPY . .
+EXPOSE 4000
+CMD [ "npm", "run", "start-dev" ]
+
+FROM base as production
+COPY package.json .
+RUN npm install --only=production
+COPY . .
+EXPOSE 4000
+CMD [ "npm", "start" ]
+
+وبعد كدا اروح كل فايل comose واحدد فيها انا عايز اى stage from dockerfile
+
+
+
+if i need add sevice like connect with database mongo
+in docker compose file add from website docker hub
+ mongo:
+    image: mongo
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
