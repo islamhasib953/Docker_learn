@@ -1,4 +1,4 @@
-version: '3'                # version of docker compose
+version: '3.1'                # version of docker compose
 services:                   # هنا ببدا اعرف اللحاجات اللى هستخدمها زى مثلا لو هستخدم داتابيز دى كدة هتكون serviceوهكذا
   node-app:                 # هنا انا عندى service واحدة بيتاعت البرنامج وسميتها node-app
     build:
